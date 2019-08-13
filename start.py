@@ -17,7 +17,7 @@ app.register_blueprint(response_bp, url_prefix='')
 def after_request(response):
     headers = {'Referer': 'http://127.0.0.1:8008/66635'}
     api_url = request.base_url.split(VERSION)[-1]
-    if api_url  == '/login':
+    if api_url == '/login':
         url = BASE_API_URL + VERSION + api_url
         resp = requests.post(url=url, cookies=request.cookies, data=request.form,
                              headers=headers)
