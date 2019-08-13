@@ -38,6 +38,5 @@ def after_request(response):
         return jsonify(resp_data)
     return response
 
-
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8009)
