@@ -1,0 +1,73 @@
+version: 1
+disable_existing_loggers: False
+
+formatters:
+  console:
+    format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s - [in %(pathname)s:%(lineno)d]'
+
+handlers:
+  iostream:
+    class: logging.StreamHandler
+    level: DEBUG
+    formatter: console
+
+  warn:
+    class: logging.handlers.TimedRotatingFileHandler
+    level: WARN
+    formatter: console
+    filename: ./log/warn.log
+    when: MIDNIGHT
+    interval : 1
+    backupCount: 100
+    encoding: utf8
+
+  debug:
+    class: logging.handlers.TimedRotatingFileHandler
+    level: DEBUG
+    formatter: console
+    filename: ./log/debug.log
+    when: MIDNIGHT
+    interval : 1
+    backupCount: 100
+    encoding: utf8
+
+  info:
+    class: logging.handlers.TimedRotatingFileHandler
+    level: INFO
+    formatter: console
+    filename: ./log/info.log
+    when: MIDNIGHT
+    interval : 1
+    backupCount: 100
+    encoding: utf8
+
+  error:
+    class: logging.handlers.TimedRotatingFileHandler
+    level: ERROR
+    formatter: console
+    filename: ./log/error.log
+    when: MIDNIGHT
+    interval : 1
+    backupCount: 100
+    encoding: utf8
+
+loggers:
+  warn:
+    level: WARN
+    handlers: [warn, iostream]
+    propagate: nod
+
+  debug:
+    level: DEBUG
+    handlers: [debug, iostream]
+    propagate: nod
+
+  info:
+    level: INFO
+    handlers: [info, iostream]
+    propagate: nod
+
+  error:
+    level: ERROR
+    handlers: [error, iostream]
+    propagate: nod

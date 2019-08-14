@@ -1,14 +1,7 @@
-
-
 from app import app
+from register_bp import register_bp
 
-
-
-
-from views.response import response_bp
-app.register_blueprint(response_bp, url_prefix='')
-
-
+register_bp(app)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8009)
