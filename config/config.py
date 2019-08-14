@@ -1,13 +1,12 @@
 import os
 
-
+VERSION = '/api/v1.0.0'
+BASE_API_URL = 'http://127.0.0.1:8008'
 
 
 class Config:
     BASE_DIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
     SECRET_KEY = "iq[qiBYIQ[C82OJNu392d3932HDNJL32kf2q"
-
-
 class DevelopmentConfig(Config):
     DEBUG = True
     # TODO mysql配置

@@ -119,3 +119,4 @@ config/config.py
 config/production_config.py
 tests/test.py
 tests/
+.idea/workspace.xml
