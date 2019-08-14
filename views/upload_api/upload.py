@@ -42,7 +42,12 @@ def upload_func():
     """
 
     try:
-        res = UploadController.start_upload(request.files, request.form)
+        req_dict = request.form.to_dict()
+        if req_dict.get("upload_type") in ("project", "requirement"):
+            res = UploadController.start_upload(request.files, request.form)
+        else:
+            # 转接至远端服务器.
+            pass
     except Exception as e:
         Logger.error(e)
     return res
