@@ -1,17 +1,15 @@
 import json
 
 import requests
-from flask import request, jsonify
+from flask import request, jsonify, g
+from werkzeug.routing import Rule
 
-from api.tagging.tagging_get import tagging_get_func
 from config.config import VERSION, BASE_API_URL
 from app import app
 
 
-
-
 from views.response import response_bp
-app.register_blueprint(response_bp, url_prefix='')
+app.register_blueprint(response_bp, url_prefix=VERSION)
 
 
 
@@ -21,15 +19,18 @@ def after_request(response):
     api_url = request.base_url.split(VERSION)[-1]
     base_url = BASE_API_URL + VERSION
     url = base_url + api_url
-    if api_url == '/login':
 
+    for rule in app.url_map._rules:
+        if isinstance(rule, Rule):
+            if rule.rule in request.url:
+                return response
+
+    if api_url == '/login':
         resp = requests.post(url=url, cookies=request.cookies, data=request.form,
                              headers=headers)
+        g.resp_cookies = resp.cookies
         resp_data = json.loads(resp.content)
-
         return jsonify(resp_data)
-    elif api_url == '/tagging/get':
-        return tagging_get_func(url, headers)
     else:
         if request.method == 'POST':
             resp = requests.post(url=url, cookies=request.cookies, json=request.json,
@@ -39,7 +40,21 @@ def after_request(response):
 
         resp_data = json.loads(resp.content)
         return jsonify(resp_data)
+
+@app.after_request
+def after_request(response):
+    '''
+    请求返回，登陆时候把cookies放入response
+    :param response:
+    :return:
+    '''
+    cookies_ = g.get('resp_cookies', None)
+    if cookies_:
+        for k, v in cookies_.items():
+            response.set_cookie(k, v)
+
     return response
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8009)

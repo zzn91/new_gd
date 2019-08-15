@@ -13,7 +13,7 @@ def req_util(resp, filter_obj, filter_fields=[], filter_info={},):
                 filter_key = filter_info.get('filter_key', '')
 
                 filter_value = filter_info.get('filter_vaule', [])
-                for k, v in resp_content:
+                for k, v in resp_content.items():
                     if k in filter_fields:
                         if k == 'content':
                             new_content = []
