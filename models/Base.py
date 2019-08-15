@@ -23,3 +23,17 @@ class BaseModel(db.Model):
     def created_at(self):
         return self._created_at.strftime('%Y-%m-%d %H:%M:%S')
 
+    @classmethod
+    def create(cls, **kwargs):
+        """Create a new record and save it """
+        instance = cls(**kwargs)
+        instance.save()
+        return instance
+
+    def save(self, commit=True):
+        """Save the record to database."""
+        db.session.add(self)
+        if commit:
+            db.session.commit()
+        return self
+

@@ -30,6 +30,8 @@ from config.error_code import NOT_UPLOAD_TASK_NAME, FILENAME_FAILED, \
                               UPLOAD_TYPE_ERROR, PARAMS_NOT_PROVIDED, \
                               OPERATOR_ERROR, NOT_UPLOAD_FILE
 
+from models import Task
+
 # todo 有关以后的扩展
 # todo 上传至本地文件/本地文件开接口.
 
@@ -237,23 +239,37 @@ def check_file_format(save_path, upload_tmp_url, upload_tmp_url_index):
 #
 #     return nums
 
-# todo 同步写入, 回调函数.
 def publish_task(project_id, obj_info):
     """发布任务数量, 异步任务回写"""
     # 同步至数据库.
-    # todo 更新obj_info信息. object_url='', object_text=''
-    # task_add.delay(project_id=project_id, objects_info=obj_info)
-    pos_obj_info = []
-    for item in obj_info:
-        item["object_url"] = ''
-        item["object_text"] = ''
-        pos_obj_info.append(item)
-    redis_data = requests.post("add_task", json={"project_id":project_id,
-                               "objects_info": obj_info})
+    # 更新obj_info信息. object_url='', object_text=''
 
-    # 会写至数据库
-    # todo 创建本地回答数据库.
-    # 默认上传成功
+    pos_obj_info = {}
+    Logger.error(obj_info)
+    for key, info in obj_info.items():
+        info = eval(info)
+        info["object_url"] = ''
+        info["object_text"] = ''
+        pos_obj_info[key] = str(info)
+
+    from flask import request
+    from config.config import VERSION, BASE_API_URL
+    headers = {'Referer': 'http://127.0.0.1:8008/15'}
+    base_url = BASE_API_URL + VERSION
+    url = os.path.join(base_url, 'upload/add_task')
+    res = requests.post(url=url,
+                        cookies=request.cookies,
+                        json={"project_id":project_id, "objects_info": pos_obj_info},
+                        headers=headers)
+    print('-----------------------------------')
+    content = eval(res.text)
+    data = content.get('data')
+    for task_id, obj_url in zip(data, obj_info.values()):
+        obj_url = eval(obj_url)
+        Task.create(**{
+            "task_id": task_id,
+            "object_url": obj_url.get("object_url", "")
+        })
 
 
 
@@ -291,11 +307,22 @@ def uploaded_check(uploaded_files, req_form):
     #     if current_user.platform != project.platform:
     #         return jsonify(code=OPERATOR_ERROR, msg="非法操作")
 
+    req_dict["check_type"] = "uploaded_check"
+    # res = requests.post("check", json=req_dict)
+
     # 文件缓存隔离级别为: 单个项目/需求, 每一次上传.
     # 合法检查
-    req_dict["check_type"] = "uploaded_check"
-    res = requests.post("check", json=req_dict)
-    res_json = json.loads(res.text())
+    from flask import request
+    from config.config import VERSION, BASE_API_URL
+    headers = {'Referer': 'http://127.0.0.1:8008/15'}
+    # api_url = request.base_url.split(VERSION)[-1]
+    base_url = BASE_API_URL + VERSION
+    url = os.path.join(base_url, 'upload/check_legal')
+    res = requests.post(url=url, cookies=request.cookies, json=req_dict, headers=headers)
+    print('-----------------------------------')
+    print(res.text, type(res.text))
+    print('-----------------------------------')
+    res_json = json.loads(res.text)
     if res_json.get("code") != 200:
         return res
 
@@ -465,8 +492,21 @@ def confirm_process(req_json):
 
     req_json["check_type"] = "confirm_process"
     req_json["counts"] = xredis.llen(upload_tmp_url_index)
-    res = requests.post("check", json=req_json)
-    res_json = json.loads(res.text())
+    # res = requests.post("check", json=req_json)
+    # res_json = json.loads(res.text())
+    # if res_json.get("code") != 200:
+    #     return res
+    from flask import request
+    from config.config import VERSION, BASE_API_URL
+    headers = {'Referer': 'http://127.0.0.1:8008/15'}
+    # api_url = request.base_url.split(VERSION)[-1]
+    base_url = BASE_API_URL + VERSION
+    url = os.path.join(base_url, 'upload/check_legal')
+    res = requests.post(url=url, cookies=request.cookies, json=req_json, headers=headers)
+    print('-----------------------------------')
+    print(res.text, type(res.text))
+    print('-----------------------------------')
+    res_json = json.loads(res.text)
     if res_json.get("code") != 200:
         return res
 
@@ -776,8 +816,8 @@ def delete_cnd_path(cdn_path):
 def upload_controller(req_file, req_form):
     req_dict = req_form.to_dict()
     if req_dict.get("upload_type") in ("project", "requirement"):
-        if current_user.role_id not in (142, 141, 104):
-            return jsonify(code=OPERATOR_ERROR, msg="操作非法")
+        # if current_user.role_id not in (142, 141, 104):
+        #     return jsonify(code=OPERATOR_ERROR, msg="操作非法")
         return uploaded_check(req_file, req_form)
     # elif req_dict.get("upload_type") in ("test_task",):
     #     return test_task_start_upload(req_file, req_form)
@@ -818,8 +858,17 @@ def upload_page(req_json):
     #     if current_user.platform != project.platform:
     #         return jsonify(code=OPERATOR_ERROR, msg="非法操作")
     req_json["check_type"] = "upload_page"
-    res = requests.post("check", json=req_json)
-    res_json = json.loads(res.text())
+
+    from flask import request
+    from config.config import VERSION, BASE_API_URL
+    headers = {'Referer': 'http://127.0.0.1:8008/15'}
+    base_url = BASE_API_URL + VERSION
+    url = os.path.join(base_url, 'upload/check_legal')
+    res = requests.post(url=url, cookies=request.cookies, json=req_json, headers=headers)
+    print('-----------------------------------')
+    print(res.text, type(res.text))
+    print('-----------------------------------')
+    res_json = json.loads(res.text)
     if res_json.get("code") != 200:
         return res
 
