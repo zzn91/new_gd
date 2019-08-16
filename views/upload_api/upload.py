@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import os
 import json
 import requests
 from flask import Blueprint, request, jsonify
@@ -52,11 +53,17 @@ def upload_func():
             api_url = request.base_url.split(VERSION)[-1]
             base_url = BASE_API_URL + VERSION
             url = base_url + api_url
+            files = {}
+            # todo 上传后删除文件.
+            for req_file in request.files.getlist("files"):
+                save_path = os.path.join('upload', req_file.filename)
+                req_file.save(save_path)
+                files = {'files': open(save_path, 'rb')}
+
             resp = requests.post(url=url, cookies=request.cookies,
                                  data=request.form,
-                                 files=request.files,
+                                 files=files,
                                  headers=headers)
-            print("上传需求文档.")
             resp_data = json.loads(resp.content)
             return jsonify(resp_data)
     except Exception as e:

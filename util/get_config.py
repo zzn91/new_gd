@@ -9,4 +9,4 @@ config = {
 
 def get_config(category, key):
     global config
-    return config.get(category, key)
+    return config[category].get(key)
