@@ -36,3 +36,4 @@ def tagging_get_func(url, headers):
 
     filter_info = {'filter_key': 'id', 'filter_value': ['object_url']}
     return req_util(resp, Response, filter_fields=['content'], filter_info=filter_info)
+
