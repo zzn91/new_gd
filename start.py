@@ -36,7 +36,9 @@ def after_request(response):
             resp = requests.post(url=url, cookies=request.cookies, json=request.json,
                                  headers=headers)
         elif request.method == 'GET':
-            resp = requests.get(url=url, cookies=request.cookies,headers=headers)
+            resp = requests.get(url=url, cookies=request.cookies, headers=headers)
+        else:
+            return jsonify(code=404)
 
         resp_data = json.loads(resp.content)
         return jsonify(resp_data)

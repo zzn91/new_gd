@@ -81,3 +81,35 @@ def tagging_submit():
     return jsonify(resp_data)
 
 
+@response_bp.route('/tagging/check', methods=["POST"])
+@response_bp.route('/tagging/check/min', methods=["POST"])
+def tagging_check():
+    '''
+    检查任务
+    :return:
+    '''
+    resp = requests.post(url=get_url(),
+                         cookies=request.cookies,
+                         json=request.json,
+                         headers={'Referer': 'http://127.0.0.1:8008/66635'})
+
+    filter_info = {'filter_key': 'cache_id', 'filter_value': ['object_url', 'user_resp']}
+    return req_util(resp, Response, filter_fields=['content'], filter_info=filter_info)
+
+
+
+@response_bp.route('/tagging/sampling_check', methods=["POST"])
+def tagging_sampling_check():
+    '''
+    抽检任务
+    :return:
+    '''
+    resp = requests.post(url=get_url(),
+                         cookies=request.cookies,
+                         json=request.json,
+                         headers={'Referer': 'http://127.0.0.1:8008/66635'})
+
+    filter_info = {'filter_key': 'cache_id', 'filter_value': ['object_url', 'user_resp']}
+    return req_util(resp, Response, filter_fields=['content'], filter_info=filter_info)
+
+
