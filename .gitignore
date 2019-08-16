@@ -121,3 +121,5 @@ tests/test.py
 tests/
 .idea/workspace.xml
 .idea/new_gd.iml
+config/__pycache__/
+views/response/__pycache__/
