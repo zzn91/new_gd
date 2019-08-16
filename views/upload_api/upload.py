@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from flask import Blueprint, request
+import json
+import requests
+from flask import Blueprint, request, jsonify
 
 from config import Logger
+from config.config import VERSION, BASE_API_URL
 from views.upload_api.upload_func.upload_func import UploadController
-# from util.verify_perm import verify_perm
 
 upload_bp = Blueprint('upload', __name__)
 
@@ -46,8 +48,17 @@ def upload_func():
         if req_dict.get("upload_type") in ("project", "requirement"):
             res = UploadController.start_upload(request.files, request.form)
         else:
-            # 转接至远端服务器.
-            pass
+            headers = {'Referer': 'http://127.0.0.1:8008/15'}
+            api_url = request.base_url.split(VERSION)[-1]
+            base_url = BASE_API_URL + VERSION
+            url = base_url + api_url
+            resp = requests.post(url=url, cookies=request.cookies,
+                                 data=request.form,
+                                 files=request.files,
+                                 headers=headers)
+            print("上传需求文档.")
+            resp_data = json.loads(resp.content)
+            return jsonify(resp_data)
     except Exception as e:
         Logger.error(e)
     return res
