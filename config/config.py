@@ -1,7 +1,7 @@
 import os
 
 VERSION = '/api/v1.0.0'
-BASE_API_URL = 'http://127.0.0.1:8008'
+BASE_API_URL = 'http://worktest.weelabel.com'
 
 
 class Config:

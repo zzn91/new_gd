@@ -3,5 +3,9 @@
   <component name="JavaScriptSettings">
     <option name="languageLevel" value="ES6" />
   </component>
+<<<<<<< HEAD
   <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.7.3 virtualenv at ~/DaveTuSimple/py3venv" project-jdk-type="Python SDK" />
+=======
+  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.6 virtualenv at ~/.virtualenvs/weelabel" project-jdk-type="Python SDK" />
+>>>>>>> 091bd7fcd940d42cbfe3846f9ea33775890b0663
 </project>
