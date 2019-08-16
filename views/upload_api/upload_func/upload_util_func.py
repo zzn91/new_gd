@@ -813,7 +813,7 @@ def delete_cnd_path(cdn_path):
 #         return jsonify(code=UPLOAD_TYPE_ERROR, msg=_('上传类型错误'))
 # todo 上传类型不同转接/转接到远端服务器.
 # 上传接口添加权限控制.
-def upload_controller(req_file, s):
+def upload_controller(req_file, req_form):
     req_dict = req_form.to_dict()
     if req_dict.get("upload_type") in ("project", "requirement"):
         # if current_user.role_id not in (142, 141, 104):
