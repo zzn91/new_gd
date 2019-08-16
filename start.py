@@ -11,8 +11,6 @@ import time
 
 register_bp(app)
 
-local_path = ['/upload/uploads', '/upload/upload_confirm',
-              '/upload/uploads/page', '/upload/uploads/delete_path']
 
 @app.before_request
 def before_request():
@@ -24,7 +22,7 @@ app.register_blueprint(response_bp, url_prefix=VERSION)
 
 @app.after_request
 def after_request(response):
-    headers = {'Referer': 'http://127.0.0.1:8008/15'}
+    headers = {'Referer': 'http://127.0.0.1:8008/66635'}
     api_url = request.base_url.split(VERSION)[-1]
     base_url = BASE_API_URL + VERSION
     url = base_url + api_url
@@ -40,9 +38,7 @@ def after_request(response):
         g.resp_cookies = resp.cookies
         resp_data = json.loads(resp.content)
         return jsonify(resp_data)
-    # the local path 需要本地处理的路径.
-    elif api_url in local_path:
-        pass
+
     else:
         if request.method == 'POST':
             resp = requests.post(url=url, cookies=request.cookies, json=request.json,
