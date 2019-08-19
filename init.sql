@@ -1,25 +1,5 @@
-/*
- Navicat Premium Data Transfer
-
- Source Server         : 志男 阿里云
- Source Server Type    : MySQL
- Source Server Version : 50726
- Source Host           : 39.96.81.167:3306
- Source Schema         : zzn_test
-
- Target Server Type    : MySQL
- Target Server Version : 50726
- File Encoding         : 65001
-
- Date: 16/08/2019 18:42:41
-*/
-
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
-
--- ----------------------------
--- Table structure for response
--- ----------------------------
 DROP TABLE IF EXISTS `response`;
 CREATE TABLE `response` (
   `_created_at` datetime DEFAULT NULL COMMENT '创建时间',

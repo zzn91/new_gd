@@ -254,7 +254,7 @@ def publish_task(project_id, obj_info):
 
     from flask import request
     from config.config import VERSION, BASE_API_URL
-    headers = {'Referer': 'http://127.0.0.1:8008/15'}
+    headers = {'Referer': 'http://127.0.0.1:8008/66635'}
     base_url = BASE_API_URL + VERSION
     url = os.path.join(base_url, 'upload/add_task')
     res = requests.post(url=url,
@@ -264,6 +264,7 @@ def publish_task(project_id, obj_info):
     print('-----------------------------------')
     content = eval(res.text)
     data = content.get('data')
+    print('data',data)
     for task_id, obj_url in zip(data, obj_info.values()):
         obj_url = eval(obj_url)
         Task.create(**{
@@ -314,7 +315,7 @@ def uploaded_check(uploaded_files, req_form):
     # 合法检查
     from flask import request
     from config.config import VERSION, BASE_API_URL
-    headers = {'Referer': 'http://127.0.0.1:8008/15'}
+    headers = {'Referer': 'http://127.0.0.1:8008/66635'}
     # api_url = request.base_url.split(VERSION)[-1]
     base_url = BASE_API_URL + VERSION
     url = os.path.join(base_url, 'upload/check_legal')
@@ -498,7 +499,7 @@ def confirm_process(req_json):
     #     return res
     from flask import request
     from config.config import VERSION, BASE_API_URL
-    headers = {'Referer': 'http://127.0.0.1:8008/15'}
+    headers = {'Referer': 'http://127.0.0.1:8008/66635'}
     # api_url = request.base_url.split(VERSION)[-1]
     base_url = BASE_API_URL + VERSION
     url = os.path.join(base_url, 'upload/check_legal')

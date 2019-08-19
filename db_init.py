@@ -26,6 +26,7 @@ def init_database():
         db_names = cursor.fetchall()
         db_name_list = [name[0] for name in db_names]
         if DB_NAME in db_name_list:
+            import os
             cursor.execute('drop database if exists ' + DB_NAME)
             cursor.execute('CREATE DATABASE IF NOT EXISTS %s DEFAULT CHARSET utf8mb4 COLLATE utf8mb4_general_ci' % DB_NAME)
             cursor.execute('mysqldump -u %s -p %s %s > %s ' % (DB_USER,
@@ -33,11 +34,12 @@ def init_database():
                                                                DB_NAME,
                                                                'init.sql'))
         else:
+            import os
             cursor.execute('CREATE DATABASE IF NOT EXISTS %s DEFAULT CHARSET utf8mb4 COLLATE utf8mb4_general_ci' % DB_NAME)
-            cursor.execute('mysqldump -u %s -p %s %s > %s ' % (DB_USER,
+            os.system('mysqldump -u%s -p%s %s>%s' % (DB_USER,
                                                                DB_PWD,
                                                                DB_NAME,
-                                                               'init.sql'))
+                                                               './init.sql'))
     except MySQLdb.Error as e:
         print("Mysql Error %d: %s" % (e.args[0], e.args[1]))
 

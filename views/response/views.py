@@ -6,7 +6,7 @@ from models import Response, Task
 from app import db
 import json
 
-from util.request_obj import get_url
+from util.request_obj import get_url, get_headers
 
 response_bp = Blueprint('response_bp', __name__)
 
@@ -23,10 +23,10 @@ def tagging_get():
     resp = requests.post(url=get_url(),
                          cookies=request.cookies,
                          json=request.json,
-                         headers={'Referer': 'http://127.0.0.1:8008/66635'})
+                         headers=get_headers())
 
-    filter_info = {'filter_key': 'id', 'filter_value': ['object_url']}
-    return req_util(resp, Response, filter_fields=['content'], filter_info=filter_info)
+    filter_info = {'filter_key': 'task_id', 'filter_value': ['object_url'], 'field': 'filter_obj.task_id == %s'}
+    return req_util(resp, Task, filter_fields=['content'], filter_info=filter_info)
 
 
 @response_bp.route('/tagging/submit', methods=["POST"])
@@ -54,7 +54,7 @@ def tagging_submit():
 
 
     resp = requests.post(url=get_url(), cookies=request.cookies, json=request.json,
-                         headers={'Referer': 'http://127.0.0.1:8008/66635'})
+                         headers=get_headers())
 
     if resp.status_code != 200:
         return jsonify(resp.content)
@@ -71,8 +71,18 @@ def tagging_submit():
 
         response.user_resp = json.dumps(user_resp)
     else:
+        resp_content = json.loads(resp.content)
+        if resp_content.get('code') != 200:
+            return jsonify(resp_data)
+
+        task = Task.query.filter_by(task_id=resp_content.get('task_id')).first()
+        if task is None:
+            return jsonify(code=10001, msg='此任务不存在')
         response = Response()
-        response.response_id = id
+        response.response_id = resp_content.get('response')
+        response.cache_id = id
+        response.object_url = task.object_url
+        response.task_id = resp_content.get('task_id')
         response.user_resp = json.dumps(user_resp)
         db.session.add(response)
 
@@ -83,6 +93,8 @@ def tagging_submit():
 
 @response_bp.route('/tagging/check', methods=["POST"])
 @response_bp.route('/tagging/check/min', methods=["POST"])
+@response_bp.route('/tagging/platform/check/min', methods=["POST"])
+@response_bp.route('/tagging/platform/check', methods=["POST"])
 def tagging_check():
     '''
     检查任务
@@ -91,14 +103,19 @@ def tagging_check():
     resp = requests.post(url=get_url(),
                          cookies=request.cookies,
                          json=request.json,
-                         headers={'Referer': 'http://127.0.0.1:8008/66635'})
+                         headers=get_headers())
+    filter_info = {'filter_key': 'id',
+                   'filter_value': ['object_url', 'user_resp'],
+                   'field': 'filter_obj.response_id == %s'}
 
-    filter_info = {'filter_key': 'cache_id', 'filter_value': ['object_url', 'user_resp']}
     return req_util(resp, Response, filter_fields=['content'], filter_info=filter_info)
 
 
 
 @response_bp.route('/tagging/sampling_check', methods=["POST"])
+@response_bp.route('/tagging/sampling_check/inner_list', methods=["POST"])
+@response_bp.route('/tagging/platform/sampling/min', methods=["POST"])
+@response_bp.route('/tagging/platform/sampling_check', methods=["POST"])
 def tagging_sampling_check():
     '''
     抽检任务
@@ -107,7 +124,7 @@ def tagging_sampling_check():
     resp = requests.post(url=get_url(),
                          cookies=request.cookies,
                          json=request.json,
-                         headers={'Referer': 'http://127.0.0.1:8008/66635'})
+                         headers=get_headers())
 
     filter_info = {'filter_key': 'cache_id', 'filter_value': ['object_url', 'user_resp']}
     return req_util(resp, Response, filter_fields=['content'], filter_info=filter_info)

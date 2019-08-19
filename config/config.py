@@ -11,8 +11,8 @@ class DevelopmentConfig(Config):
     DEBUG = True
     # TODO mysql配置
     DB_USER = 'root'
-    DB_HOST = '39.96.81.167'
-    DB_PWD = 'tusimple2'
+    DB_HOST = '127.0.0.1'
+    DB_PWD = '248536'
     DB_PORT = 3306
     DB_NAME = 'zzn_test'
 
