@@ -1,21 +1,21 @@
-/*
- Navicat Premium Data Transfer
-
- Source Server         : 志男 阿里云
- Source Server Type    : MySQL
- Source Server Version : 50726
- Source Host           : 39.96.81.167:3306
- Source Schema         : zzn_test
-
- Target Server Type    : MySQL
- Target Server Version : 50726
- File Encoding         : 65001
-
- Date: 16/08/2019 18:42:41
-*/
-
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
+
+-- ----------------------------
+-- Table structure for task
+-- ----------------------------
+DROP TABLE IF EXISTS `task`;
+CREATE TABLE `task` (
+  `_created_at` datetime DEFAULT NULL COMMENT '创建时间',
+  `_updated_at` datetime DEFAULT NULL COMMENT '更新时间',
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `task_id` int(11) DEFAULT NULL COMMENT '任务ID',
+  `object_url` text COMMENT '图片路径',
+  PRIMARY KEY (`id`),
+  KEY `ix_task_task_id` (`task_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=6304 DEFAULT CHARSET=utf8mb4;
+
+SET FOREIGN_KEY_CHECKS = 1;
 
 -- ----------------------------
 -- Table structure for response
@@ -36,18 +36,3 @@ CREATE TABLE `response` (
   CONSTRAINT `response_ibfk_1` FOREIGN KEY (`task_id`) REFERENCES `task` (`task_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=52 DEFAULT CHARSET=utf8mb4;
 
--- ----------------------------
--- Table structure for task
--- ----------------------------
-DROP TABLE IF EXISTS `task`;
-CREATE TABLE `task` (
-  `_created_at` datetime DEFAULT NULL COMMENT '创建时间',
-  `_updated_at` datetime DEFAULT NULL COMMENT '更新时间',
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `task_id` int(11) DEFAULT NULL COMMENT '任务ID',
-  `object_url` text COMMENT '图片路径',
-  PRIMARY KEY (`id`),
-  KEY `ix_task_task_id` (`task_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6304 DEFAULT CHARSET=utf8mb4;
-
-SET FOREIGN_KEY_CHECKS = 1;
