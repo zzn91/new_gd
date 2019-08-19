@@ -9,6 +9,8 @@ from app import app
 from register_bp import register_bp
 import time
 
+from util.request_obj import get_headers
+
 register_bp(app)
 
 
@@ -22,22 +24,29 @@ app.register_blueprint(response_bp, url_prefix=VERSION)
 
 @app.after_request
 def after_request(response):
-    headers = {'Referer': 'http://127.0.0.1:8008/66635'}
+    headers = get_headers()
+
     api_url = request.base_url.split(VERSION)[-1]
     base_url = BASE_API_URL + VERSION
     url = base_url + api_url
 
     for rule in app.url_map._rules:
         if isinstance(rule, Rule):
-            if rule.rule in request.url:
+            rule_ = rule.rule.split(VERSION)[-1]
+
+            if rule_ == api_url:
                 return response
 
     if api_url == '/login':
         resp = requests.post(url=url, cookies=request.cookies, data=request.form,
                              headers=headers)
-        g.resp_cookies = resp.cookies
         resp_data = json.loads(resp.content)
-        return jsonify(resp_data)
+
+        response = jsonify(resp_data)
+
+        for k, v in resp.cookies.items():
+            response.set_cookie(k, v)
+        return response
 
     else:
         if request.method == 'POST':
@@ -51,19 +60,6 @@ def after_request(response):
         resp_data = json.loads(resp.content)
         return jsonify(resp_data)
 
-@app.after_request
-def after_request(response):
-    '''
-    请求返回，登陆时候把cookies放入response
-    :param response:
-    :return:
-    '''
-    cookies_ = g.get('resp_cookies', None)
-    if cookies_:
-        for k, v in cookies_.items():
-            response.set_cookie(k, v)
-
-    return response
 
 
 if __name__ == '__main__':
