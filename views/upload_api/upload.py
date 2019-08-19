@@ -54,7 +54,6 @@ def upload_func():
             base_url = BASE_API_URL + VERSION
             url = base_url + api_url
             files = {}
-            # todo 上传后删除文件.
             for req_file in request.files.getlist("files"):
                 save_path = os.path.join('upload', req_file.filename)
                 req_file.save(save_path)

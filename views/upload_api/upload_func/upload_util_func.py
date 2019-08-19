@@ -6,6 +6,7 @@ import shutil
 import validators
 import hashlib
 import requests
+import math
 
 from PIL import Image
 from datetime import datetime
@@ -13,8 +14,11 @@ from flask_babel import _
 from config import Logger
 from flask_login import current_user
 from flask import jsonify, current_app
+from util.request_obj import get_url, get_headers
+from concurrent.futures import ThreadPoolExecutor
 
-from app import xredis
+
+from app import xredis, app, db
 from util.get_config import get_config
 from .const import UPLOAD_TMP_FILE, UPLOAD_TMP_URLS, UPLOAD_TMP_BATCH_URLS, \
     UPLOAD_TMP_URLS_INDEX
@@ -29,6 +33,9 @@ from config.error_code import NOT_UPLOAD_TASK_NAME, FILENAME_FAILED, \
                               FILE_LINE_ERROR, FILE_NOT_EXIST, DATA_NOT_FOUND,\
                               UPLOAD_TYPE_ERROR, PARAMS_NOT_PROVIDED, \
                               OPERATOR_ERROR, NOT_UPLOAD_FILE
+
+# 上传时, 伪装成异步顺序队列.
+executor = ThreadPoolExecutor(1)
 
 from models import Task
 
@@ -239,38 +246,82 @@ def check_file_format(save_path, upload_tmp_url, upload_tmp_url_index):
 #
 #     return nums
 
+def _add_task_thread(url, headers, cookies, project_id, obj_info):
+    with app.app_context():
+        pos_obj_info = {}
+        for _index, _info in enumerate(obj_info):
+            info = eval(_info)
+            info["object_url"] = ''
+            info["object_text"] = ''
+            pos_obj_info[_index] = str(info)
+
+        data = {"project_id": project_id, "objects_info": pos_obj_info}
+        # print(data)
+        import time
+        # from datetime import datetime
+        # print("请求开始时间: %s" % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        # begin_time =time.time()
+        res = requests.post(url=url,
+                            headers=headers,
+                            cookies=cookies,
+                            json=data)
+        # pivot_time = time.time()
+        # print("请求结束时间: %s" % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        # print("请求远端链接, 花费时间: %s" % (pivot_time-begin_time))
+        content = eval(res.text)
+        code = content.get('code')
+        if code == 200:
+            data = content.get('data')
+            for task_id, obj_url in zip(data, obj_info):
+                obj_url = eval(obj_url)
+                Task.create(**{
+                    "task_id": task_id,
+                    "object_url": obj_url.get("object_url", "")
+                })
+            # print("写入数据库话费时间: %s" % (time.time()-pivot_time))
+            return True
+        else:
+            Logger.error("存在上传失败的数据段.")
+            return False
+
 def publish_task(project_id, obj_info):
     """发布任务数量, 异步任务回写"""
     # 同步至数据库.
     # 更新obj_info信息. object_url='', object_text=''
-
-    pos_obj_info = {}
-    Logger.error(obj_info)
-    for key, info in obj_info.items():
-        info = eval(info)
-        info["object_url"] = ''
-        info["object_text"] = ''
-        pos_obj_info[key] = str(info)
+    obj_value_info = [value for value in obj_info.values()]
 
     from flask import request
     from config.config import VERSION, BASE_API_URL
-    headers = {'Referer': 'http://127.0.0.1:8008/66635'}
+    headers = get_headers()
     base_url = BASE_API_URL + VERSION
     url = os.path.join(base_url, 'upload/add_task')
-    res = requests.post(url=url,
-                        cookies=request.cookies,
-                        json={"project_id":project_id, "objects_info": pos_obj_info},
-                        headers=headers)
-    print('-----------------------------------')
-    content = eval(res.text)
-    data = content.get('data')
-    print('data',data)
-    for task_id, obj_url in zip(data, obj_info.values()):
-        obj_url = eval(obj_url)
-        Task.create(**{
-            "task_id": task_id,
-            "object_url": obj_url.get("object_url", "")
-        })
+
+    circle_count = 500
+    circle_num = math.ceil(float(len(obj_value_info))/circle_count)
+    # thread_pool_num = (circle_num <= 10) and circle_num or 20
+    # 保证有序性.
+    pivot_pos = 0
+    future_tasks = []
+    # print('长度 %s' % len(obj_value_info))
+    for _ in range(int(circle_num)):
+        # print(pivot_pos, pivot_pos+circle_count)
+        _obj_info = obj_value_info[pivot_pos: pivot_pos+circle_count]
+        # print('截取长度 %s' % len(_obj_info))
+        process = executor.submit(_add_task_thread,
+                                  url, headers, request.cookies,
+                                  project_id,
+                                  _obj_info)
+        future_tasks.append(process)
+        pivot_pos += circle_count
+    # 不等待, 异步.
+    # thread_pool.shutdown()
+
+    # res_data = []
+    # for process in future_tasks:
+    #     res_data.append(process.result())
+    #
+    # if False in res_data:
+    #     Logger.error("存在上传失败的数据段.")
 
 
 
@@ -315,7 +366,7 @@ def uploaded_check(uploaded_files, req_form):
     # 合法检查
     from flask import request
     from config.config import VERSION, BASE_API_URL
-    headers = {'Referer': 'http://127.0.0.1:8008/66635'}
+    headers = get_headers()
     # api_url = request.base_url.split(VERSION)[-1]
     base_url = BASE_API_URL + VERSION
     url = os.path.join(base_url, 'upload/check_legal')
@@ -499,7 +550,7 @@ def confirm_process(req_json):
     #     return res
     from flask import request
     from config.config import VERSION, BASE_API_URL
-    headers = {'Referer': 'http://127.0.0.1:8008/66635'}
+    headers = get_headers()
     # api_url = request.base_url.split(VERSION)[-1]
     base_url = BASE_API_URL + VERSION
     url = os.path.join(base_url, 'upload/check_legal')
@@ -622,9 +673,13 @@ def publish_batch(req_json):
     # active_status = LocalStatus.query.filter_by(category="batch",
     #                                             name="published").first()
     # batch_obj.update(**{"project_id": project_id, "status": active_status.id})
+    from config.config import VERSION, BASE_API_URL
+    headers = get_headers()
+    base_url = BASE_API_URL + VERSION
+    url = os.path.join(base_url, 'upload/check_legal')
     req_json["check_type"] = "publish_batch"
-    res = requests.post("check", json=req_json)
-    res_json = json.loads(res.text())
+    res = requests.post(url, json=req_json, headers=headers)
+    res_json = json.loads(res.text)
     if res_json.get("code") != 200:
         return res
     try:
@@ -862,7 +917,7 @@ def upload_page(req_json):
 
     from flask import request
     from config.config import VERSION, BASE_API_URL
-    headers = {'Referer': 'http://127.0.0.1:8008/15'}
+    headers = get_headers()
     base_url = BASE_API_URL + VERSION
     url = os.path.join(base_url, 'upload/check_legal')
     res = requests.post(url=url, cookies=request.cookies, json=req_json, headers=headers)
